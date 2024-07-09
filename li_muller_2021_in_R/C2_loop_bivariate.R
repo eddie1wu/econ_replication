@@ -1,14 +1,14 @@
 
 rm(list = ls())
-library("R.matlab")
-library("readxl")
-library("xlsx")
-library("dplyr")
+library(R.matlab)
+library(readxl)
+library(xlsx)
+library(dplyr)
 
 source("utils.R")
 
 ##
-directory_home <- "/Users/eddiewu/Documents/Mon_travail/MY_PHD/Soonwoo/proj_many_controls/replication_in_R"
+directory_home <- "/Users/eddiewu/Documents/Mon_travail/MY_PHD/Soonwoo/proj_many_controls/econ_replication/li_muller_2021_in_R"
 setwd(directory_home)
 
 
