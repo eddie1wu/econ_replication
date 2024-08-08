@@ -1,30 +1,32 @@
 
 rm(list = ls())
 library(R.matlab)
-library(readxl)
-library(xlsx)
+library(openxlsx)
 library(dplyr)
 
 source("utils.R")
 
-##
+## Set working directory here
 directory_home <- "/Users/eddiewu/Documents/Mon_travail/MY_PHD/Soonwoo/proj_many_controls/econ_replication/li_muller_2021_in_R"
 setwd(directory_home)
 
+output_path <- paste0(directory_home, "/my_output")
+cv_path <- paste0(directory_home, "/critical_values")
+
 
 ##
-location_CV <- "CV_vals.mat"
+location_CV <- file.path(cv_path, "CV_vals.mat")
 CV <- readMat(location_CV)[["CV"]]
 
 
 examples <- "Bivariatedata1.xlsx"
-data <- file.path(directory_home, examples)
+data <- file.path(output_path, examples)
 
 alpha <- 0.05
 
 
 ##
-ds <- read_excel(data, sheet = "Design")
+ds <- read.xlsx(data, sheet = "Design")
 
 
 ##
@@ -94,7 +96,7 @@ coef_biv <- list(betaL = as.numeric(DLong %*% Y),
                  betaS = as.numeric(DShort %*% Y))
 
 # QC
-QC <- read_excel(data, sheet = "QC")
+QC <- read.xlsx(data, sheet = "QC")
 QC <- as.numeric(QC$Value)
 stopifnot(abs((QC[1] - coef_biv$betaL) / QC[1]) < 10^(-3))
 stopifnot(abs((QC[2] - coef_biv$betaS) / QC[2]) < 10^(-3))
@@ -136,12 +138,11 @@ Cutoffkappa$R2_grid <- Cutoffkappa$R2_grid * norm(MqY, "F")^2
 
 
 # Write the results to Excel
-write.xlsx(Cutoffkappa,
-           file = data,
-           sheetName = "Kappabound",
-           col.names = FALSE,
-           row.names = FALSE,
-           append = TRUE)
+wb <- loadWorkbook(data)
+addWorksheet(wb, sheetName = "Kappabound")
+writeData(wb, sheet = "Kappabound", x = Cutoffkappa, colNames = FALSE, rowNames = FALSE)
+saveWorkbook(wb, file = data, overwrite = TRUE)
+
 
 idata <- 1
 sheet_name <- as.character(idata)
@@ -150,17 +151,17 @@ results <- data.frame(
   sqrtKappa2_div_N = sqrt(Cutoffkappa$R2_grid[2] / N),
   Kappa2_div_normMxqY2 = Cutoffkappa$R2_grid[2] / (norm(MxqY, "F")^2)
 )
-write.xlsx(t(results),
-           file = file.path(directory_home, 'Empirical.xlsx'),
-           sheetName = sheet_name,
-           col.names = FALSE,
-           row.names = FALSE)
+results <- t(results)
 
 
+wb <- createWorkbook()
+addWorksheet(wb, sheetName = sheet_name)
+writeData(wb, sheet = sheet_name, x = results, colNames = FALSE, rowNames = FALSE)
+saveWorkbook(wb, file = file.path(output_path, 'Empirical.xlsx'), overwrite = TRUE)
 
 
 ##
-Statistics <- read_excel(data, sheet = "Statistic")
+Statistics <- read.xlsx(data, sheet = "Statistic")
 
 # Update statistics
 Statistics$Value[Statistics$Statistic == "t-statistic long"] <- coef_biv$betaL / sqrt(sig_biv$sigL2)
@@ -194,11 +195,10 @@ new_stats <- data.frame(
 Statistics <- rbind(Statistics, new_stats)
 
 # Write the updated statistics to Excel
-write.xlsx(Statistics,
-           file = data,
-           sheetName = "Matlab",
-           append = TRUE)
-
+wb <- loadWorkbook(data)
+addWorksheet(wb, sheetName = "Matlab")
+writeData(wb, sheet = "Matlab", x = Statistics, colNames = TRUE, rowNames = FALSE)
+saveWorkbook(wb, file = data, overwrite = TRUE)
 
 
 

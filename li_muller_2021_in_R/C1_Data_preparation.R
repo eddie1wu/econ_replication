@@ -4,16 +4,18 @@ rm(list = ls())
 library(dplyr)
 library(haven)
 library(openxlsx)
-library(car)
 library(estimatr)
 
-##
+## Set working directory here
 directory_home <- "/Users/eddiewu/Documents/Mon_travail/MY_PHD/Soonwoo/proj_many_controls/econ_replication/li_muller_2021_in_R"
 setwd(directory_home)
 
+data_path <- paste0(directory_home, "/data")
+output_path <- paste0(directory_home, "/my_output")
+
 
 # Load data
-df <- read_dta(paste0(directory_home, "/Pre-regression data.dta"))
+df <- read_dta(paste0(data_path, "/Pre-regression data.dta"))
 
 
 # Data cleaning and transformations
@@ -57,10 +59,9 @@ cl <- "firmid"
 df <- df[ , c(Y, X, Q, Z, cl)]
 
 # Rename vars
-df <- df %>%
-  rename(Y = Y,
-         X = X,
-         clustervar = cl)
+names(df)[names(df) == Y] <- "Y"
+names(df)[names(df) == X] <- "X"
+names(df)[names(df) == cl] <- "clustervar"
 
 for (qq in 1:length(Q)) {
   names(df)[names(df) == Q[qq]] <- paste0("Q", qq)
@@ -146,7 +147,6 @@ model <- lm_robust(formula,
                    data = df)
 coefL <- model$coefficients["X"]
 tstatL <- model$coefficients["X"] / model$std.error["X"]
-message(paste0("The long reg coef and stat of X are: ", coefL, " ", tstatL))
 
 
 ## Short regression
@@ -161,7 +161,6 @@ model <- lm_robust(formula,
                    data = df)
 coefS <- model$coefficients["X"]
 tstatS <- model$coefficients["X"] / model$std.error["X"]
-message(paste0("The short reg coef and stat of X are: ", coefS, " ", tstatS))
 
 
 ## Variables for bivariate test
@@ -289,10 +288,7 @@ writeData(wb, "QC", qc)
 
 
 # Save xlsx
-saveWorkbook(wb, file = paste0(directory_home, "/Bivariatedata1.xlsx"), overwrite = TRUE)
-
-
-
+saveWorkbook(wb, file = paste0(output_path, "/Bivariatedata1.xlsx"), overwrite = TRUE)
 
 
 
