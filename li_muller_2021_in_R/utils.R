@@ -55,6 +55,7 @@ logLik_GLR <- function(betahat_long, betahat_short, sig_biv, r_d, CV_struct) {
 }
 
 
+
 findnearest <- function(A, B) {
   
   nA <- length(A) # Coz scalar, should be 1
@@ -116,5 +117,7 @@ logLik_GLR_norm <- function(tauhat_b, tauhat_theta, psi_b, max_tau_g) {
   
   return(out_logLik_GLR_norm)
 }
+
+
 
 

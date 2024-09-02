@@ -6,7 +6,7 @@ library(haven)
 library(openxlsx)
 library(estimatr)
 
-## Set working directory here
+### Set working directory here
 directory_home <- "/Users/eddiewu/Documents/Mon_travail/MY_PHD/Soonwoo/proj_many_controls/econ_replication/li_muller_2021_in_R"
 setwd(directory_home)
 
@@ -18,7 +18,7 @@ output_path <- paste0(directory_home, "/my_output")
 df <- read_dta(paste0(data_path, "/Pre-regression data.dta"))
 
 
-# Data cleaning and transformations
+# Data cleaning and generating variables
 df <- df %>% filter(!is.na(maxPA1past))
 
 for (ii in 1:3) {
@@ -45,7 +45,7 @@ for (ii in lvl) {
 }
 
 
-# Variable definitions
+# Mapping variables to Y, X, Q, Z and cl
 Y <- "lnS"
 X <- "lnpastinter"
 Q <- c(names(df)[grep("Iidrel.*", names(df))],
@@ -55,7 +55,7 @@ Z <- names(df)[grep("Ibuyerid_.*_x_.*", names(df))]
 cl <- "firmid"
 
 
-# Keep vars
+# Keep vars that we need
 df <- df[ , c(Y, X, Q, Z, cl)]
 
 # Rename vars
@@ -72,7 +72,7 @@ for (zz in 1:length(Z)) {
 }
 
 
-# Define vars
+# Define vars for regressions later
 Y <- "Y"
 X <- "X"
 Q <- names(df)[grep("Q.*", names(df))]
@@ -140,7 +140,7 @@ summary(model)
 # df <- df[, !names(df) %in% drop_list]
 
 
-## Long regression
+# Long regression
 model <- lm_robust(formula,
                    se_type = "stata",
                    clusters = clustervar,
@@ -149,7 +149,7 @@ coefL <- model$coefficients["X"]
 tstatL <- model$coefficients["X"] / model$std.error["X"]
 
 
-## Short regression
+# Short regression
 formula <- as.formula(paste0(Y,
                              " ~ ",
                              X, " + ",
@@ -163,12 +163,12 @@ coefS <- model$coefficients["X"]
 tstatS <- model$coefficients["X"] / model$std.error["X"]
 
 
-## Variables for bivariate test
+# Variables for bivariate test
 df <- df %>% filter(!is.na(model$fitted.values))
 df <- df[ , c(Y, X, Q, Z, cl)]
 
 
-## Statistics
+### Statistics
 # R square Y on X given Q 
 formula <- as.formula(paste0(Y,
                              " ~ ",

@@ -14,7 +14,7 @@ output_path <- paste0(directory_home, "/my_output")
 cv_path <- paste0(directory_home, "/critical_values")
 
 
-## Get critical values and define getcv() function
+### Get critical values and define getcv() function
 cvtab <- list(read.table(file.path(cv_path, "cvmat_1.txt")),
               read.table(file.path(cv_path, "cvmat_5.txt")),
               read.table(file.path(cv_path, "cvmat_10.txt")))
@@ -71,7 +71,7 @@ getLRr <- function(y1, y2, kg, wb) {
 
 
 
-# Define bhat
+### Define bhat
 bhat <- function(y1, y2, kg, wb) {
   if (
     ( y1 < 0 && (
@@ -111,7 +111,7 @@ fzind <- 4
 
 
 
-### Define variables from emptab
+### Define variables after loading emptab.csv
 file <- file.path(output_path, "emptab.csv")
 emptab <- read.csv(file, header = F)
 
@@ -123,13 +123,11 @@ Om22 <- emptab[12, iemp]
 compute_Kdel <- function(kappa) {
   return( kappa * sqrt(emptab[1, iemp]) * sqrt(emptab[4, iemp] / emptab[9, iemp]) )
 }
-# Kdel <- compute_Kdel(kappa)
 Omr <- Om12 / sqrt(Om11 * Om22)
 omsd <- sqrt(Om11 * Om22 - Om12^2)
 compute_kg <- function(kappa) {
   return(compute_Kdel(kappa) * sqrt(Om11) / omsd)
 }
-# kg <- compute_kg(kappa)
 wb <- (Om11 - Om12)/omsd;
 
 y1 <- bl / sqrt(Om11)
@@ -139,12 +137,12 @@ Omi = solve(rbind(c(Om11, Om12), c(Om12, Om22)))
 
 
 
-### Compute data for plotting
+### Compute confidence intervals for plotting
 pdata <- c()
 
 for (kappa in seq(0, kmax, kmax/50)) {
   if (kappa == 0) {
-    kappa <- 0.0000001
+    kappa <- 1e-8
   }
   cvx <- numeric(3)
   kg <- compute_kg(kappa)
@@ -154,13 +152,12 @@ for (kappa in seq(0, kmax, kmax/50)) {
   }
 
   roots <- numeric()
-  for (j in 1:3) {
-    for (ix in seq(-1, 1, 2)) {
+  for (j in 1:3) { # Loop over each alpha
+    for (ix in seq(-1, 1, 2)) { # Loop over upper/lower bound
       equation <- function(b) {
         return( getLRr(y1 - b, y2 - wb * b, kg, wb) - cvx[j] )
       }
       b_init <- bhat(y1, y2, kg, wb) + 2 * ix
-      print(b_init)
       root <- uniroot(equation, c(b_init-2, b_init+2))$root
       roots <- c(roots, root)
     }
@@ -190,7 +187,7 @@ xx <- append(xx, list(temp), after = 0)
 
 
 
-### Interpolation
+### Interpolation to find kstar
 temp <- xx[[fzind]]
 x <- temp[, 1]
 y <- temp[, 2]

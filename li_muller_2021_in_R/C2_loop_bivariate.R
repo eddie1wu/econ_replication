@@ -6,7 +6,7 @@ library(dplyr)
 
 source("utils.R")
 
-## Set working directory here
+# Set working directory here
 directory_home <- "/Users/eddiewu/Documents/Mon_travail/MY_PHD/Soonwoo/proj_many_controls/econ_replication/li_muller_2021_in_R"
 setwd(directory_home)
 
@@ -14,22 +14,22 @@ output_path <- paste0(directory_home, "/my_output")
 cv_path <- paste0(directory_home, "/critical_values")
 
 
-##
+# Load critical values
 location_CV <- file.path(cv_path, "CV_vals.mat")
 CV <- readMat(location_CV)[["CV"]]
 
 
+# Load output from C1_Data_preparation
 examples <- "Bivariatedata1.xlsx"
 data <- file.path(output_path, examples)
 
 alpha <- 0.05
 
 
-##
+# Load the excel sheet for matrix computation
 ds <- read.xlsx(data, sheet = "Design")
 
-
-##
+# Matrix computations
 varnames <- names(ds)
 Y <- as.numeric(ds$Y)
 X <- as.numeric(ds$X)
@@ -44,8 +44,8 @@ XQ <- cbind(X, Q)
 lambda <- solve(t(XQ) %*% XQ) %*% (t(XQ) %*% Z)
 lambda <- lambda[1, ]
 
-##
 
+###
 MqY <- Y - Q %*% solve(t(Q) %*% Q) %*% (t(Q) %*% Y)
 MqX <- X - Q %*% solve(t(Q) %*% Q) %*% (t(Q) %*% X)
 MqZ <- Z - Q %*% solve(t(Q) %*% Q) %*% (t(Q) %*% Z)
@@ -56,7 +56,7 @@ N <- length(Y)
 
 
 ### Errors from short regression
-## Clustered standard errors
+# Clustered standard errors
 cluster_groups <- as.numeric(ds$clustervar)
 cluster_groups_unique <- unique(cluster_groups)
 P <- length(cluster_groups_unique)
@@ -66,7 +66,7 @@ for (ii in 1:P) {
 }
 
 
-##
+###
 ehat_short <- Y - XQ %*% solve(t(XQ) %*% XQ) %*% (t(XQ) %*% Y)
 sighat_e <- matrix(0, nrow = N, ncol = N)
 for (ii in 1:P) {
@@ -76,7 +76,7 @@ for (ii in 1:P) {
 }
 
 
-##
+###
 QZ <- cbind(Q, Z)
 XQZ <- cbind(X, Q, Z)
 DLong <- solve(t(XQZ) %*% XQZ) %*% t(XQZ)
@@ -84,14 +84,13 @@ DLong <- DLong[1, ]
 DShort <- solve(t(XQ) %*% XQ) %*% t(XQ)
 DShort <- DShort[1, ]
 D <- rbind(DLong, DShort)
-rm(Dsig)
 Dsig <- D
 VarLS <- Dsig %*% sighat_e %*% t(Dsig)
 sig_biv <- list(sigL2 = VarLS[1, 1], sigLS = VarLS[1, 2], sigS2 = VarLS[2, 2])
 
 
 
-## Coefficients
+### Coefficients
 coef_biv <- list(betaL = as.numeric(DLong %*% Y),
                  betaS = as.numeric(DShort %*% Y))
 
@@ -105,8 +104,6 @@ stopifnot(abs((QC[2] - coef_biv$betaS) / QC[2]) < 10^(-3))
 tstatL <- coef_biv$betaL / sqrt(sig_biv$sigL2)
 
 
-
-##
 # 
 R2_grid <- seq(0, 0.35, by = 0.00001)
 Test <- numeric(length(R2_grid))
@@ -118,7 +115,6 @@ ii <- 1*(alpha == 0.01) + 2*(alpha == 0.05) + 3*(alpha == 0.1)
 CV_struct <- CV[ , 1, ii]
 
 
-##
 # 
 for (iTest in 1:length(R2_grid)) {
   R2_bound <- R2_grid[iTest]
@@ -160,7 +156,7 @@ writeData(wb, sheet = sheet_name, x = results, colNames = FALSE, rowNames = FALS
 saveWorkbook(wb, file = file.path(output_path, 'Empirical.xlsx'), overwrite = TRUE)
 
 
-##
+#
 Statistics <- read.xlsx(data, sheet = "Statistic")
 
 # Update statistics
